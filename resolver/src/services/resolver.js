@@ -1,17 +1,25 @@
 const axios = require("axios");
-const { rootBaseUrl: root, TLDBaseUrl: tld } = require("../config/env");
+const { rootBaseUrl: root } = require("../config/env");
 
 module.exports = async (url) => { 
     if (url.length) {
-        const rootResponse = await axios.get(`/?url=${url}`, { baseURL: root });
+        let status;
+        let rootResponse;
 
-        switch(rootResponse.status) {
-            case 200:
-                return rootResponse.data.ip;
+        try {
+            rootResponse = await axios.get(`/?url=${url}`, { baseURL: root });
+        } catch ({ response }) {
+           status = response.status;
+        }
+
+        switch(status) {
+            case 204:
+                console.log(rootResponse.status)
+                throw new Error("TLD not found");
             case 303:
-                const { data: { ip } } = await axios.get(`${tld}/?url=${url}`);
-
-                return ip;
+                const tldResponse = await axios.get(`${rootResponse.data.tld_url}/?url=${url}`);
+                console.log(tldResponse)
+                return "ip";
         }
     }
 }
