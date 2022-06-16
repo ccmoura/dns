@@ -6,7 +6,15 @@ const routes = new Router();
 routes.get("/:url(*)", async ({ params: { url } }, response) => {
     let ip;
     if(url !== "favicon.ico") {
-        ip = await resolver(url);
+        try {
+            ip = await resolver(url);
+        } catch (error) {
+            if(error.message.toLowerCase().includes("not found")) {
+                return response.status(404).json({ error: "IP address not found" });
+            }
+
+            return response.status(503).json({ error: "Service unavailable" });
+        }
 
         return response.status(200).json({ url, ip_address: ip });
     }
